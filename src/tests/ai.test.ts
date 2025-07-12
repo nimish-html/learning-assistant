@@ -1,32 +1,26 @@
-import { xai, grokModel } from '@/lib/ai';
+import { grok, o3, gpt41, pickModel } from '@/lib/ai';
 
 describe('AI Module Tests', () => {
-  describe('xai export', () => {
-    it('should export xai function', () => {
-      expect(xai).toBeDefined();
-      expect(typeof xai).toBe('function');
+  describe('grok runtime', () => {
+    it('should export configured grok runtime', () => {
+      expect(grok).toBeDefined();
+      expect(grok).toHaveProperty('modelId');
+      expect(grok.modelId).toBe('grok-4-0709');
     });
   });
 
-  describe('grokModel export', () => {
-    it('should export configured grok model', () => {
-      expect(grokModel).toBeDefined();
-      expect(grokModel).toHaveProperty('modelId');
-      expect(grokModel.modelId).toBe('grok-4-0709');
-    });
-
-    it('should have correct model configuration', () => {
-      expect(grokModel).toHaveProperty('provider');
-      expect(grokModel.provider).toBeDefined();
+  describe('openai runtimes', () => {
+    it('should export o3 and gpt-4.1 runtimes', () => {
+      expect(o3.modelId).toBe('o3');
+      expect(gpt41.modelId).toBe('gpt-4.1');
     });
   });
 
-  describe('model instantiation', () => {
-    it('should create XAI provider with custom model', () => {
-      const model1 = xai('grok-4-0709');
-      const model2 = xai('grok-4-0709');
-      expect(model1.modelId).toBe('grok-4-0709');
-      expect(model2.modelId).toBe('grok-4-0709');
+  describe('pickModel helper', () => {
+    it('should return the correct runtime for each id', () => {
+      expect(pickModel('grok-4-0709')).toBe(grok);
+      expect(pickModel('o3')).toBe(o3);
+      expect(pickModel('gpt-4.1')).toBe(gpt41);
     });
   });
-}); 
+});
