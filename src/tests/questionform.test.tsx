@@ -24,6 +24,7 @@ describe('QuestionForm Component Tests', () => {
     expect(screen.getByLabelText(/number of questions/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/difficulty level/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/question type/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/output format/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/preferred source/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /generate questions/i })).toBeInTheDocument();
   });
@@ -35,6 +36,7 @@ describe('QuestionForm Component Tests', () => {
     expect(screen.getByDisplayValue('5')).toBeInTheDocument();
     expect(screen.getByDisplayValue('Amateur')).toBeInTheDocument();
     expect(screen.getByDisplayValue('Multiple Choice Questions (MCQ)')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('📚 Solved Examples (answers with each question)')).toBeInTheDocument();
   });
 
   it('should call onSubmit with valid data when form is submitted', async () => {
@@ -62,6 +64,7 @@ describe('QuestionForm Component Tests', () => {
         difficulty: 'Amateur',
         type: 'MCQ',
         preferredSource: 'NCERT',
+        outputFormat: 'solved-examples',
       });
     });
   });
@@ -108,11 +111,12 @@ describe('QuestionForm Component Tests', () => {
     expect(screen.getByLabelText(/number of questions/i)).toBeDisabled();
     expect(screen.getByLabelText(/difficulty level/i)).toBeDisabled();
     expect(screen.getByLabelText(/question type/i)).toBeDisabled();
+    expect(screen.getByLabelText(/output format/i)).toBeDisabled();
     expect(screen.getByLabelText(/preferred source/i)).toBeDisabled();
     
     const submitButton = screen.getByRole('button');
     expect(submitButton).toBeDisabled();
-    expect(submitButton).toHaveTextContent('Generating Questions...');
+    expect(submitButton).toHaveTextContent('Generating...');
   });
 
   it('should validate count boundaries', async () => {
@@ -193,6 +197,106 @@ describe('QuestionForm Component Tests', () => {
           type: 'Subjective',
         })
       );
+    });
+  });
+
+  describe('Output Format Selection', () => {
+    it('should render all output format options', () => {
+      render(<QuestionForm {...defaultProps} />);
+
+      const outputFormatSelect = screen.getByTestId('output-format-select');
+      expect(outputFormatSelect).toBeInTheDocument();
+
+      // Check all three options are present
+      expect(screen.getByRole('option', { name: /📚 Solved Examples \(answers with each question\)/i })).toBeInTheDocument();
+      expect(screen.getByRole('option', { name: /📝 Assignment Format \(answer key at end\)/i })).toBeInTheDocument();
+      expect(screen.getByRole('option', { name: /📄 Separate Documents \(questions & answers separate\)/i })).toBeInTheDocument();
+    });
+
+    it('should show help text for solved examples format by default', () => {
+      render(<QuestionForm {...defaultProps} />);
+
+      expect(screen.getByText(/Perfect for practice sessions - answers and explanations appear right after each question/i)).toBeInTheDocument();
+    });
+
+    it('should change help text when output format is changed', async () => {
+      const user = userEvent.setup();
+      render(<QuestionForm {...defaultProps} />);
+
+      // Change to assignment format
+      await user.selectOptions(screen.getByLabelText(/output format/i), 'assignment-format');
+      
+      expect(screen.getByText(/Ideal for homework - all questions first, then complete answer key at the end/i)).toBeInTheDocument();
+      expect(screen.queryByText(/Perfect for practice sessions/i)).not.toBeInTheDocument();
+
+      // Change to separate documents format
+      await user.selectOptions(screen.getByLabelText(/output format/i), 'separate-documents');
+      
+      expect(screen.getByText(/Best for tests - creates separate question paper and answer key documents/i)).toBeInTheDocument();
+      expect(screen.queryByText(/Ideal for homework/i)).not.toBeInTheDocument();
+    });
+
+    it('should submit with assignment format when selected', async () => {
+      const user = userEvent.setup();
+      render(<QuestionForm {...defaultProps} />);
+
+      await user.selectOptions(screen.getByLabelText(/exam by country/i), '🇮🇳 JEE (India)');
+      await user.selectOptions(screen.getByLabelText(/output format/i), 'assignment-format');
+      
+      fireEvent.submit(screen.getByTestId('question-form'));
+
+      await waitFor(() => {
+        expect(mockOnSubmit).toHaveBeenCalledWith(
+          expect.objectContaining({
+            outputFormat: 'assignment-format',
+          })
+        );
+      });
+    });
+
+    it('should submit with separate documents format when selected', async () => {
+      const user = userEvent.setup();
+      render(<QuestionForm {...defaultProps} />);
+
+      await user.selectOptions(screen.getByLabelText(/exam by country/i), '🇮🇳 JEE (India)');
+      await user.selectOptions(screen.getByLabelText(/output format/i), 'separate-documents');
+      
+      fireEvent.submit(screen.getByTestId('question-form'));
+
+      await waitFor(() => {
+        expect(mockOnSubmit).toHaveBeenCalledWith(
+          expect.objectContaining({
+            outputFormat: 'separate-documents',
+          })
+        );
+      });
+    });
+
+    it('should include visual icons for each format option', () => {
+      render(<QuestionForm {...defaultProps} />);
+
+      // Check that the default format (solved-examples) shows an icon in the help text
+      const solvedExamplesIcon = screen.getByText(/Perfect for practice sessions/i).closest('div')?.querySelector('svg');
+      expect(solvedExamplesIcon).toBeInTheDocument();
+      
+      // The other format help texts are not visible by default since they're conditional
+      // This test verifies that the icon structure is working for the visible format
+    });
+
+    it('should maintain output format selection when other fields change', async () => {
+      const user = userEvent.setup();
+      render(<QuestionForm {...defaultProps} />);
+
+      // Change output format first
+      await user.selectOptions(screen.getByLabelText(/output format/i), 'assignment-format');
+      
+      // Change other fields
+      await user.selectOptions(screen.getByLabelText(/exam by country/i), '🇮🇳 JEE (India)');
+      await user.selectOptions(screen.getByLabelText(/difficulty level/i), 'Ninja');
+      
+      // Output format should still be assignment-format
+      expect(screen.getByDisplayValue('📝 Assignment Format (answer key at end)')).toBeInTheDocument();
+      expect(screen.getByText(/Ideal for homework/i)).toBeInTheDocument();
     });
   });
 }); 

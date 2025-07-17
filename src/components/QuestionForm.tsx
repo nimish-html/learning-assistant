@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { GeneratePayload, GeneratePayloadSchema } from '@/lib/schema';
-import { GraduationCap, Settings, BookOpen, Target, Hash, FileText } from 'lucide-react';
+import { GeneratePayload, GeneratePayloadSchema, OutputFormat } from '@/lib/schema';
+import { GraduationCap, Settings, BookOpen, Target, Hash, FileText, Layout, FileCheck, Files } from 'lucide-react';
 
 interface QuestionFormProps {
   onSubmit: (payload: GeneratePayload) => void;
@@ -28,6 +28,7 @@ export default function QuestionForm({ onSubmit, isLoading = false }: QuestionFo
     difficulty: 'Amateur',
     type: 'MCQ',
     preferredSource: '',
+    outputFormat: 'solved-examples',
   });
   const [errors, setErrors] = useState<Partial<Record<keyof GeneratePayload, string>>>({});
 
@@ -80,9 +81,10 @@ export default function QuestionForm({ onSubmit, isLoading = false }: QuestionFo
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <BookOpen className="w-4 h-4 text-gray-600" />
-                <label className="text-sm font-medium text-gray-700">Exam by Country *</label>
+                <label htmlFor="exam" className="text-sm font-medium text-gray-700">Exam by Country *</label>
               </div>
               <select
+                id="exam"
                 value={formData.exam || ''}
                 onChange={(e) => handleInputChange('exam', e.target.value)}
                 className="w-full h-10 px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-black focus:border-black disabled:opacity-50"
@@ -102,9 +104,10 @@ export default function QuestionForm({ onSubmit, isLoading = false }: QuestionFo
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <GraduationCap className="w-4 h-4 text-gray-600" />
-                <label className="text-sm font-medium text-gray-700">Class/Standard *</label>
+                <label htmlFor="classStandard" className="text-sm font-medium text-gray-700">Class/Standard *</label>
               </div>
               <select
+                id="classStandard"
                 value={formData.classStandard || '12th'}
                 onChange={(e) => handleInputChange('classStandard', e.target.value as '11th' | '12th')}
                 className="w-full h-10 px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-black focus:border-black disabled:opacity-50"
@@ -120,9 +123,10 @@ export default function QuestionForm({ onSubmit, isLoading = false }: QuestionFo
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <Hash className="w-4 h-4 text-gray-600" />
-                <label className="text-sm font-medium text-gray-700">Number of Questions *</label>
+                <label htmlFor="count" className="text-sm font-medium text-gray-700">Number of Questions *</label>
               </div>
               <input
+                id="count"
                 type="number"
                 min="1"
                 max="50"
@@ -139,9 +143,10 @@ export default function QuestionForm({ onSubmit, isLoading = false }: QuestionFo
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <Target className="w-4 h-4 text-gray-600" />
-                <label className="text-sm font-medium text-gray-700">Difficulty Level *</label>
+                <label htmlFor="difficulty" className="text-sm font-medium text-gray-700">Difficulty Level *</label>
               </div>
               <select
+                id="difficulty"
                 value={formData.difficulty || 'Amateur'}
                 onChange={(e) => handleInputChange('difficulty', e.target.value as 'Beginner' | 'Amateur' | 'Ninja')}
                 className="w-full h-10 px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-black focus:border-black disabled:opacity-50"
@@ -158,9 +163,10 @@ export default function QuestionForm({ onSubmit, isLoading = false }: QuestionFo
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <FileText className="w-4 h-4 text-gray-600" />
-                <label className="text-sm font-medium text-gray-700">Question Type *</label>
+                <label htmlFor="type" className="text-sm font-medium text-gray-700">Question Type *</label>
               </div>
               <select
+                id="type"
                 value={formData.type || 'MCQ'}
                 onChange={(e) => handleInputChange('type', e.target.value as 'MCQ' | 'Subjective')}
                 className="w-full h-10 px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-black focus:border-black disabled:opacity-50"
@@ -172,13 +178,55 @@ export default function QuestionForm({ onSubmit, isLoading = false }: QuestionFo
               {errors.type && <p className="text-sm text-red-600">{errors.type}</p>}
             </div>
 
+            {/* Output Format */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Layout className="w-4 h-4 text-gray-600" />
+                <label htmlFor="outputFormat" className="text-sm font-medium text-gray-700">Output Format *</label>
+              </div>
+              <select
+                id="outputFormat"
+                value={formData.outputFormat || 'solved-examples'}
+                onChange={(e) => handleInputChange('outputFormat', e.target.value as OutputFormat)}
+                className="w-full h-10 px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-black focus:border-black disabled:opacity-50"
+                disabled={isLoading}
+                data-testid="output-format-select"
+              >
+                <option value="solved-examples">📚 Solved Examples (answers with each question)</option>
+                <option value="assignment-format">📝 Assignment Format (answer key at end)</option>
+                <option value="separate-documents">📄 Separate Documents (questions & answers separate)</option>
+              </select>
+              {errors.outputFormat && <p className="text-sm text-red-600">{errors.outputFormat}</p>}
+              <div className="text-xs text-gray-500 mt-1">
+                {formData.outputFormat === 'solved-examples' && (
+                  <div className="flex items-start gap-2">
+                    <FileCheck className="w-3 h-3 mt-0.5 text-blue-500" />
+                    <span>Perfect for practice sessions - answers and explanations appear right after each question</span>
+                  </div>
+                )}
+                {formData.outputFormat === 'assignment-format' && (
+                  <div className="flex items-start gap-2">
+                    <FileText className="w-3 h-3 mt-0.5 text-green-500" />
+                    <span>Ideal for homework - all questions first, then complete answer key at the end</span>
+                  </div>
+                )}
+                {formData.outputFormat === 'separate-documents' && (
+                  <div className="flex items-start gap-2">
+                    <Files className="w-3 h-3 mt-0.5 text-purple-500" />
+                    <span>Best for tests - creates separate question paper and answer key documents</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
             {/* Preferred Source - Full Width */}
             <div className="md:col-span-2 space-y-2">
               <div className="flex items-center gap-2">
                 <Settings className="w-4 h-4 text-gray-600" />
-                <label className="text-sm font-medium text-gray-700">Preferred Source (Optional)</label>
+                <label htmlFor="preferredSource" className="text-sm font-medium text-gray-700">Preferred Source (Optional)</label>
               </div>
               <input
+                id="preferredSource"
                 type="text"
                 value={formData.preferredSource || ''}
                 onChange={(e) => handleInputChange('preferredSource', e.target.value)}

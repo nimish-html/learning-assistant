@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import QuestionForm from '@/components/QuestionForm';
 import QuestionList from '@/components/QuestionList';
 import VerificationView from '@/components/VerificationView';
-import { GeneratePayload, Question, QuestionSchema } from '@/lib/schema';
+import { GeneratePayload, Question, QuestionSchema, OutputFormat } from '@/lib/schema';
 import { 
   Brain, 
   Sparkles, 
@@ -34,8 +34,28 @@ export default function TutoratiApp() {
   // New state for questions and verification
   const [questions, setQuestions] = useState<Question[] | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
-  const [verifyResult, setVerifyResult] = useState<any>(null);
+  const [verifyResult, setVerifyResult] = useState<object | null>(null);
   const [verifyError, setVerifyError] = useState<string | null>(null);
+  
+  // State for output format preference
+  const [outputFormat, setOutputFormat] = useState<OutputFormat>('solved-examples');
+
+  // Load format preference from session storage on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedFormat = sessionStorage.getItem('tutorati-output-format') as OutputFormat;
+      if (savedFormat && ['solved-examples', 'assignment-format', 'separate-documents'].includes(savedFormat)) {
+        setOutputFormat(savedFormat);
+      }
+    }
+  }, []);
+
+  // Save format preference to session storage when it changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('tutorati-output-format', outputFormat);
+    }
+  }, [outputFormat]);
 
   // Parse completion when it changes and loading finishes
   useEffect(() => {
@@ -115,6 +135,9 @@ export default function TutoratiApp() {
     setShowForm(false);
     setLastPayload(payload);
     
+    // Update output format from form submission
+    setOutputFormat(payload.outputFormat || 'solved-examples');
+    
     // Reset previous results
     setQuestions(null);
     setVerifyResult(null);
@@ -156,8 +179,8 @@ export default function TutoratiApp() {
       const text = await res.text();
       const parsed = JSON.parse(text);
       setVerifyResult(parsed);
-    } catch (err: any) {
-      setVerifyError(err.message || 'Verification error');
+    } catch (err: unknown) {
+      setVerifyError(err instanceof Error ? err.message : 'Verification error');
     } finally {
       setIsVerifying(false);
     }
@@ -327,7 +350,7 @@ export default function TutoratiApp() {
                             <CheckCircle className="w-5 h-5 text-green-600" />
                             <span className="text-green-800 font-medium">Successfully parsed {questions.length} questions!</span>
                           </div>
-                          <QuestionList questions={questions} />
+                          <QuestionList questions={questions} outputFormat={outputFormat} />
                         </div>
                       ) : (
                         <div className="bg-secondary rounded-lg p-4">

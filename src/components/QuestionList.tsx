@@ -1,13 +1,18 @@
 'use client';
 
 import React from 'react';
-import { Question } from '@/lib/schema';
+import { Question, OutputFormat } from '@/lib/schema';
+import { getFormatter } from '@/lib/formatters';
+import DocumentSection from './DocumentSection';
+import PDFExportControls from './PDFExportControls';
 
 interface QuestionListProps {
   questions: Question[];
+  outputFormat?: OutputFormat; // Optional for backward compatibility
 }
 
-const QuestionList: React.FC<QuestionListProps> = ({ questions }) => {
+const QuestionList: React.FC<QuestionListProps> = ({ questions, outputFormat = 'solved-examples' }) => {
+  // Legacy rendering function for backward compatibility
   const renderQuestion = (question: Question, index: number) => (
     <div
       key={question.id || index}
@@ -72,9 +77,41 @@ const QuestionList: React.FC<QuestionListProps> = ({ questions }) => {
     </div>
   );
 
+  // If no outputFormat is provided or it's solved-examples, use legacy rendering for backward compatibility
+  if (!outputFormat || outputFormat === 'solved-examples') {
+    return (
+      <div>
+        {questions.map((q, idx) => renderQuestion(q, idx))}
+        {/* Add PDF export controls when questions are available */}
+        {questions.length > 0 && (
+          <PDFExportControls 
+            questions={questions} 
+            outputFormat={outputFormat} 
+          />
+        )}
+      </div>
+    );
+  }
+
+  // Use formatter service for other output formats
+  const formatter = getFormatter(outputFormat);
+  const formattedOutput = formatter.format(questions);
+
   return (
     <div>
-      {questions.map((q, idx) => renderQuestion(q, idx))}
+      {formattedOutput.documents.map((document, index) => (
+        <DocumentSection 
+          key={`${document.type}-${index}`} 
+          document={document} 
+        />
+      ))}
+      {/* Add PDF export controls when questions are available */}
+      {questions.length > 0 && (
+        <PDFExportControls 
+          questions={questions} 
+          outputFormat={outputFormat} 
+        />
+      )}
     </div>
   );
 };
