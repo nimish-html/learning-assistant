@@ -5,6 +5,11 @@ import { useState, useEffect } from 'react';
 import QuestionForm from '@/components/QuestionForm';
 import QuestionList from '@/components/QuestionList';
 import VerificationView from '@/components/VerificationView';
+import SaveResultsButton from '@/components/SaveResultsButton';
+import SavedResultsList from '@/components/SavedResultsList';
+import { LazySignInForm as SignInForm, LazySignUpForm as SignUpForm } from '@/components/LazyAuthComponents';
+import UserMenu from '@/components/UserMenu';
+import { useAuth } from '@/lib/auth-context';
 import { GeneratePayload, Question, QuestionSchema, OutputFormat } from '@/lib/schema';
 import { 
   Brain, 
@@ -17,10 +22,18 @@ import {
   Target,
   Users,
   Award,
-  X
+  X,
+  User,
+  LogIn,
+  UserPlus,
+  Save,
+  History
 } from 'lucide-react';
 
 export default function TutoratiApp() {
+  // Authentication state
+  const { user, loading: authLoading } = useAuth();
+  
   // Configure the hook to expect a **raw text** stream instead of the default `data` protocol
   // This prevents "Failed to parse stream string" errors that are harmless for plain text streams.
   const { completion, complete, isLoading, error } = useCompletion({
@@ -30,6 +43,11 @@ export default function TutoratiApp() {
   
   const [showForm, setShowForm] = useState(true);
   const [lastPayload, setLastPayload] = useState<GeneratePayload | null>(null);
+  
+  // UI state for authentication
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
+  const [showSavedResults, setShowSavedResults] = useState(false);
   
   // New state for questions and verification
   const [questions, setQuestions] = useState<Question[] | null>(null);
@@ -201,9 +219,54 @@ export default function TutoratiApp() {
                 <p className="text-xs text-muted-foreground">v0.1</p>
               </div>
             </div>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Globe className="w-4 h-4" />
-              <span>Global STEM Questions</span>
+            
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Globe className="w-4 h-4" />
+                <span>Global STEM Questions</span>
+              </div>
+              
+              {/* Authentication Status */}
+              {authLoading ? (
+                <div className="w-8 h-8 rounded-full bg-gray-200 animate-pulse"></div>
+              ) : user ? (
+                <div className="flex items-center gap-3">
+                  {/* Saved Results Button */}
+                  <button
+                    onClick={() => setShowSavedResults(!showSavedResults)}
+                    className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                  >
+                    <History className="w-4 h-4" />
+                    <span className="hidden sm:inline">Saved Results</span>
+                  </button>
+                  
+                  {/* User Menu */}
+                  <UserMenu user={user} />
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      setAuthMode('signin');
+                      setShowAuthModal(true);
+                    }}
+                    className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                  >
+                    <LogIn className="w-4 h-4" />
+                    <span className="hidden sm:inline">Sign In</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setAuthMode('signup');
+                      setShowAuthModal(true);
+                    }}
+                    className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium bg-primary text-white hover:bg-primary/90 rounded-lg transition-colors"
+                  >
+                    <UserPlus className="w-4 h-4" />
+                    <span className="hidden sm:inline">Sign Up</span>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -350,7 +413,18 @@ export default function TutoratiApp() {
                             <CheckCircle className="w-5 h-5 text-green-600" />
                             <span className="text-green-800 font-medium">Successfully parsed {questions.length} questions!</span>
                           </div>
-                          <QuestionList questions={questions} outputFormat={outputFormat} />
+                          <QuestionList 
+                            questions={questions} 
+                            outputFormat={outputFormat}
+                            metadata={lastPayload ? {
+                              exam: lastPayload.exam,
+                              classStandard: lastPayload.classStandard,
+                              difficulty: lastPayload.difficulty,
+                              type: lastPayload.type,
+                              outputFormat: outputFormat,
+                              questionCount: questions.length
+                            } : undefined}
+                          />
                         </div>
                       ) : (
                         <div className="bg-secondary rounded-lg p-4">
@@ -363,6 +437,53 @@ export default function TutoratiApp() {
 
                       {/* Action Buttons */}
                       <div className="flex flex-wrap gap-4 mt-8 pt-6 border-t">
+                        {/* Save Results Button - Only for authenticated users */}
+                        {user && questions && lastPayload && (
+                          <SaveResultsButton
+                            questions={questions}
+                            metadata={{
+                              exam: lastPayload.exam,
+                              classStandard: lastPayload.classStandard,
+                              difficulty: lastPayload.difficulty,
+                              type: lastPayload.type,
+                              outputFormat: outputFormat,
+                              questionCount: questions.length
+                            }}
+                          />
+                        )}
+                        
+                        {/* Sign-in prompt for unauthenticated users */}
+                        {!user && questions && (
+                          <div className="flex items-center gap-3 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                            <Save className="w-5 h-5 text-blue-600" />
+                            <div>
+                              <p className="text-sm font-medium text-blue-800">Save your results</p>
+                              <p className="text-xs text-blue-600">
+                                <button
+                                  onClick={() => {
+                                    setAuthMode('signin');
+                                    setShowAuthModal(true);
+                                  }}
+                                  className="underline hover:no-underline"
+                                >
+                                  Sign in
+                                </button>
+                                {' or '}
+                                <button
+                                  onClick={() => {
+                                    setAuthMode('signup');
+                                    setShowAuthModal(true);
+                                  }}
+                                  className="underline hover:no-underline"
+                                >
+                                  create an account
+                                </button>
+                                {' to save your generated questions'}
+                              </p>
+                            </div>
+                          </div>
+                        )}
+
                         {/* Verify Button */}
                         {questions && !isVerifying && !verifyResult && (
                           <button
@@ -428,6 +549,91 @@ export default function TutoratiApp() {
           )}
         </div>
       </main>
+
+      {/* Saved Results Modal */}
+      {showSavedResults && user && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+            <div className="flex items-center justify-between p-6 border-b">
+              <div className="flex items-center gap-3">
+                <History className="w-6 h-6 text-primary" />
+                <h2 className="text-xl font-semibold text-primary">Saved Results</h2>
+              </div>
+              <button
+                onClick={() => setShowSavedResults(false)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+              <SavedResultsList />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Authentication Modal */}
+      {showAuthModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full">
+            <div className="flex items-center justify-between p-6 border-b">
+              <div className="flex items-center gap-3">
+                {authMode === 'signin' ? (
+                  <>
+                    <LogIn className="w-6 h-6 text-primary" />
+                    <h2 className="text-xl font-semibold text-primary">Sign In</h2>
+                  </>
+                ) : (
+                  <>
+                    <UserPlus className="w-6 h-6 text-primary" />
+                    <h2 className="text-xl font-semibold text-primary">Sign Up</h2>
+                  </>
+                )}
+              </div>
+              <button
+                onClick={() => setShowAuthModal(false)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6">
+              {authMode === 'signin' ? (
+                <div>
+                  <SignInForm onSuccess={() => setShowAuthModal(false)} />
+                  <div className="mt-4 text-center">
+                    <p className="text-sm text-muted-foreground">
+                      Don't have an account?{' '}
+                      <button
+                        onClick={() => setAuthMode('signup')}
+                        className="text-primary hover:underline font-medium"
+                      >
+                        Sign up
+                      </button>
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <SignUpForm onSuccess={() => setShowAuthModal(false)} />
+                  <div className="mt-4 text-center">
+                    <p className="text-sm text-muted-foreground">
+                      Already have an account?{' '}
+                      <button
+                        onClick={() => setAuthMode('signin')}
+                        className="text-primary hover:underline font-medium"
+                      >
+                        Sign in
+                      </button>
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Footer */}
       <footer className="border-t bg-white/80 backdrop-blur-md">

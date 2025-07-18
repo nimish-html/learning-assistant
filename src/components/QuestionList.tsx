@@ -1,17 +1,19 @@
 'use client';
 
 import React from 'react';
-import { Question, OutputFormat } from '@/lib/schema';
+import { Question, OutputFormat, SavedResultMetadata } from '@/lib/schema';
 import { getFormatter } from '@/lib/formatters';
 import DocumentSection from './DocumentSection';
 import PDFExportControls from './PDFExportControls';
+import SaveResultsButton from './SaveResultsButton';
 
 interface QuestionListProps {
   questions: Question[];
   outputFormat?: OutputFormat; // Optional for backward compatibility
+  metadata?: SavedResultMetadata; // Optional metadata for saving functionality
 }
 
-const QuestionList: React.FC<QuestionListProps> = ({ questions, outputFormat = 'solved-examples' }) => {
+const QuestionList: React.FC<QuestionListProps> = ({ questions, outputFormat = 'solved-examples', metadata }) => {
   // Legacy rendering function for backward compatibility
   const renderQuestion = (question: Question, index: number) => (
     <div
@@ -82,12 +84,25 @@ const QuestionList: React.FC<QuestionListProps> = ({ questions, outputFormat = '
     return (
       <div>
         {questions.map((q, idx) => renderQuestion(q, idx))}
-        {/* Add PDF export controls when questions are available */}
+        {/* Action buttons section */}
         {questions.length > 0 && (
-          <PDFExportControls 
-            questions={questions} 
-            outputFormat={outputFormat} 
-          />
+          <div className="flex flex-wrap gap-4 mt-8 pt-6 border-t">
+            {/* Save Results Button - only shows for authenticated users */}
+            {metadata && (
+              <SaveResultsButton 
+                questions={questions} 
+                metadata={metadata}
+                onSaveSuccess={(savedResult) => {
+                  console.log('Results saved successfully:', savedResult.id);
+                }}
+              />
+            )}
+            {/* PDF Export Controls */}
+            <PDFExportControls 
+              questions={questions} 
+              outputFormat={outputFormat} 
+            />
+          </div>
         )}
       </div>
     );
@@ -105,12 +120,25 @@ const QuestionList: React.FC<QuestionListProps> = ({ questions, outputFormat = '
           document={document} 
         />
       ))}
-      {/* Add PDF export controls when questions are available */}
+      {/* Action buttons section */}
       {questions.length > 0 && (
-        <PDFExportControls 
-          questions={questions} 
-          outputFormat={outputFormat} 
-        />
+        <div className="flex flex-wrap gap-4 mt-8 pt-6 border-t">
+          {/* Save Results Button - only shows for authenticated users */}
+          {metadata && (
+            <SaveResultsButton 
+              questions={questions} 
+              metadata={metadata}
+              onSaveSuccess={(savedResult) => {
+                console.log('Results saved successfully:', savedResult.id);
+              }}
+            />
+          )}
+          {/* PDF Export Controls */}
+          <PDFExportControls 
+            questions={questions} 
+            outputFormat={outputFormat} 
+          />
+        </div>
       )}
     </div>
   );
