@@ -10,9 +10,10 @@ const nextConfig: NextConfig = {
       '@ai-sdk/xai',
       'react-aria-components'
     ],
-    // Enable server components optimization
-    serverComponentsExternalPackages: ['@supabase/supabase-js'],
   },
+  
+  // Transpile packages for better compatibility
+  transpilePackages: ['@supabase/supabase-js'],
   
   // Optimize images and static assets
   images: {

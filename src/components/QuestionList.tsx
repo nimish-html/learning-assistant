@@ -3,6 +3,7 @@
 import React from 'react';
 import { Question, OutputFormat, SavedResultMetadata } from '@/lib/schema';
 import { getFormatter } from '@/lib/formatters';
+import { formatOption } from '@/lib/option-utils';
 import DocumentSection from './DocumentSection';
 import PDFExportControls from './PDFExportControls';
 import SaveResultsButton from './SaveResultsButton';
@@ -42,18 +43,17 @@ const QuestionList: React.FC<QuestionListProps> = ({ questions, outputFormat = '
           <p className="text-sm font-medium text-gray-700 mb-2">Options:</p>
           <div className="space-y-1">
             {question.options.map((opt, idx) => {
-              const label = String.fromCharCode(65 + idx);
+              const formattedOption = formatOption(opt, idx);
               const isCorrect = opt.trim().toLowerCase() === question.answer.trim().toLowerCase();
               return (
                 <div
                   key={idx}
                   className={
-                    'text-sm flex items-start gap-2 ' +
+                    'text-sm ' +
                     (isCorrect ? 'text-green-800 font-semibold' : 'text-gray-800')
                   }
                 >
-                  <span className="font-medium">{label}.</span>
-                  <span>{opt}</span>
+                  <span>{formattedOption}</span>
                 </div>
               );
             })}

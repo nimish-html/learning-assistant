@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Question } from '@/lib/schema';
+import { formatOption } from '@/lib/option-utils';
 import { HelpCircle } from 'lucide-react';
 
 interface QuestionOnlyViewProps {
@@ -61,18 +62,13 @@ const QuestionOnlyView: React.FC<QuestionOnlyViewProps> = ({
         <div className="ml-4">
           <div className="space-y-2">
             {question.options.map((option, optIndex) => {
-              const optionLabel = String.fromCharCode(65 + optIndex); // A, B, C, D...
+              const formattedOption = formatOption(option, optIndex);
               return (
                 <div
                   key={optIndex}
-                  className="flex items-start gap-3 text-gray-800"
+                  className="text-gray-800 leading-relaxed"
                 >
-                  <span className="font-medium text-gray-600 min-w-[20px]">
-                    {optionLabel}.
-                  </span>
-                  <span className="leading-relaxed">
-                    {option}
-                  </span>
+                  <span>{formattedOption}</span>
                 </div>
               );
             })}
