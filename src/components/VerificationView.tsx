@@ -11,7 +11,7 @@ interface Issue {
   severity: 'high' | 'medium' | 'low' | string;
 }
 
-interface VerificationResult {
+export interface VerificationResult {
   validQuestions: Question[];
   issues: Issue[];
   summary: {

@@ -4,7 +4,7 @@ import { useCompletion } from '@ai-sdk/react';
 import { useState, useEffect } from 'react';
 import QuestionForm from '@/components/QuestionForm';
 import QuestionList from '@/components/QuestionList';
-import VerificationView from '@/components/VerificationView';
+import VerificationView, { VerificationResult } from '@/components/VerificationView';
 import SaveResultsButton from '@/components/SaveResultsButton';
 import SavedResultsList from '@/components/SavedResultsList';
 import { LazySignInForm as SignInForm, LazySignUpForm as SignUpForm } from '@/components/LazyAuthComponents';
@@ -52,7 +52,7 @@ export default function TutoratiApp() {
   // New state for questions and verification
   const [questions, setQuestions] = useState<Question[] | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
-  const [verifyResult, setVerifyResult] = useState<object | null>(null);
+  const [verifyResult, setVerifyResult] = useState<VerificationResult | null>(null);
   const [verifyError, setVerifyError] = useState<string | null>(null);
   
   // State for output format preference
