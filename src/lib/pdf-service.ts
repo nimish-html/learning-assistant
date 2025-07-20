@@ -279,6 +279,7 @@ export class PDFService {
   private addContent(pdf: jsPDF, content: string, options: MergedPDFOptions): void {
     const pageWidth = pdf.internal.pageSize.getWidth();
     const pageHeight = pdf.internal.pageSize.getHeight();
+    const maxWidth = pageWidth - options.margins.left - options.margins.right;
     
     // Starting Y position (after header)
     let currentY = options.margins.top + (options.includeHeader ? 20 : 0);
@@ -291,47 +292,31 @@ export class PDFService {
     const lines = content.split('\n');
     
     for (const line of lines) {
-      // Check if we need a new page
-      if (currentY > pageHeight - options.margins.bottom - 15) {
-        pdf.addPage();
-        currentY = options.margins.top;
-      }
+      // Check if we need a new page before processing the line
+      currentY = this.checkPageBreak(pdf, currentY, pageHeight, options);
       
       // Handle different line types
       if (line.trim() === '') {
         // Empty line - add spacing
         currentY += 5;
       } else if (line.startsWith('**') && line.endsWith('**')) {
-        // Bold text (questions, answers, etc.)
-        const boldText = line.replace(/\*\*/g, '');
-        pdf.setFont('helvetica', 'bold');
-        pdf.text(boldText, options.margins.left, currentY);
-        pdf.setFont('helvetica', 'normal');
-        currentY += 6;
+        // Bold text (questions, answers, etc.) with text wrapping
+        currentY = this.addBoldText(pdf, line, currentY, maxWidth, options);
       } else if (line.startsWith('# ')) {
         // Header text
-        const headerText = line.replace('# ', '');
-        pdf.setFontSize(14);
-        pdf.setFont('helvetica', 'bold');
-        pdf.text(headerText, options.margins.left, currentY);
-        pdf.setFontSize(11);
-        pdf.setFont('helvetica', 'normal');
-        currentY += 10;
+        currentY = this.addHeaderText(pdf, line, currentY, options);
       } else if (line === '---') {
         // Separator line
-        currentY += 5;
-        pdf.setLineWidth(0.3);
-        pdf.line(
-          options.margins.left,
-          currentY,
-          pageWidth - options.margins.right,
-          currentY
-        );
-        currentY += 5;
+        currentY = this.addSeparatorLine(pdf, currentY, pageWidth, options);
+      } else if (/^\d+\./.test(line.trim())) {
+        // Numbered list item (questions)
+        currentY = this.addNumberedListItem(pdf, line, currentY, maxWidth, options);
+      } else if (/^[A-Z]\./.test(line.trim())) {
+        // Multiple choice option
+        currentY = this.addMultipleChoiceOption(pdf, line, currentY, maxWidth, options);
       } else {
-        // Regular text
-        pdf.text(line, options.margins.left, currentY);
-        currentY += 5;
+        // Regular text with wrapping
+        currentY = this.addRegularText(pdf, line, currentY, maxWidth, options);
       }
       
       currentY += 2; // Add small spacing between lines

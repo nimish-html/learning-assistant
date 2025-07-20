@@ -152,6 +152,7 @@ export class SavedResultsService {
         .from('saved_results')
         .select(`
           id,
+          user_id,
           title,
           created_at,
           updated_at,
