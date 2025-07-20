@@ -43,7 +43,7 @@ export function getFormatter(format: OutputFormat): QuestionFormatter {
 export function formatQuestionContent(question: Question, index: number): string {
   const questionNumber = index + 1;
   let content = `**Question ${questionNumber}:** ${question.stem}\n\n`;
-  
+
   // Add options for MCQ questions
   if (question.options && question.options.length > 0) {
     question.options.forEach((option, optIndex) => {
@@ -53,7 +53,7 @@ export function formatQuestionContent(question: Question, index: number): string
     });
     content += '\n';
   }
-  
+
   return content;
 }
 
@@ -66,11 +66,11 @@ export function formatQuestionContent(question: Question, index: number): string
 export function formatAnswerContent(question: Question, index: number): string {
   const questionNumber = index + 1;
   let content = `**Answer ${questionNumber}:** ${question.answer}\n\n`;
-  
+
   if (question.explanation) {
     content += `**Explanation:** ${question.explanation}\n\n`;
   }
-  
+
   return content;
 }
 
@@ -81,26 +81,26 @@ export function formatAnswerContent(question: Question, index: number): string {
 export class SolvedExamplesFormatter implements QuestionFormatter {
   format(questions: Question[]): FormattedOutput {
     let combinedContent = '';
-    
+
     questions.forEach((question, index) => {
       // Add question
       combinedContent += formatQuestionContent(question, index);
-      
+
       // Add answer immediately after question
       combinedContent += formatAnswerContent(question, index);
-      
+
       // Add separator between questions (except for the last one)
       if (index < questions.length - 1) {
         combinedContent += '---\n\n';
       }
     });
-    
+
     const document: Document = {
       title: 'Solved Examples',
       content: combinedContent,
       type: 'combined'
     };
-    
+
     return {
       format: 'solved-examples',
       questions,
@@ -120,22 +120,22 @@ export class AssignmentFormatter implements QuestionFormatter {
     questions.forEach((question, index) => {
       questionsContent += formatQuestionContent(question, index);
     });
-    
+
     // Generate answer key section
     let answersContent = '# Answer Key\n\n';
     questions.forEach((question, index) => {
       answersContent += formatAnswerContent(question, index);
     });
-    
+
     // Combine both sections in a single document
     const combinedContent = questionsContent + '\n---\n\n' + answersContent;
-    
+
     const document: Document = {
       title: 'Assignment with Answer Key',
       content: combinedContent,
       type: 'combined'
     };
-    
+
     return {
       format: 'assignment-format',
       questions,
@@ -155,25 +155,25 @@ export class SeparateDocumentsFormatter implements QuestionFormatter {
     questions.forEach((question, index) => {
       questionsContent += formatQuestionContent(question, index);
     });
-    
+
     // Generate answer key document
     let answersContent = '';
     questions.forEach((question, index) => {
       answersContent += formatAnswerContent(question, index);
     });
-    
+
     const questionsDocument: Document = {
       title: 'Questions',
       content: questionsContent,
       type: 'questions'
     };
-    
+
     const answersDocument: Document = {
       title: 'Answer Key',
       content: answersContent,
       type: 'answers'
     };
-    
+
     return {
       format: 'separate-documents',
       questions,

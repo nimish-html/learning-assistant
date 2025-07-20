@@ -37,7 +37,7 @@ export default function TutoratiApp() {
   
   // Configure the hook to expect a **raw text** stream instead of the default `data` protocol
   // This prevents "Failed to parse stream string" errors that are harmless for plain text streams.
-  const { completion, complete, isLoading, error } = useCompletion({
+  const { completion, complete, isLoading, error, setCompletion } = useCompletion({
     api: getApiConfig().generateQuestionsUrl,
     streamProtocol: 'text',
     headers: getSupabaseHeaders(),
@@ -170,10 +170,21 @@ export default function TutoratiApp() {
   };
 
   const handleNewGeneration = () => {
+    // Reset all state to initial values
     setShowForm(true);
     setQuestions(null);
     setVerifyResult(null);
     setVerifyError(null);
+    setLastPayload(null);
+    
+    // Clear the completion state to fully reset the UI
+    // This will hide the results section and show the hero section again
+    setCompletion('');
+    
+    // Scroll to top for better UX
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   // Verify questions with backend
