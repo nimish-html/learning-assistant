@@ -48,16 +48,13 @@ describe('AnswerKeyView', () => {
     // Answer header should be displayed
     expect(screen.getByText('Answer 1')).toBeInTheDocument();
     expect(screen.getByText('Correct Answer:')).toBeInTheDocument();
-    expect(screen.getAllByText('Paris')).toHaveLength(2); // One in correct answer, one in options
+    expect(screen.getAllByText('Paris')).toHaveLength(1); // Only in correct answer section
     
-    // All options should be displayed
-    expect(screen.getByText('A.')).toBeInTheDocument();
-    expect(screen.getByText('London')).toBeInTheDocument();
-    expect(screen.getByText('B.')).toBeInTheDocument();
-    expect(screen.getByText('Berlin')).toBeInTheDocument();
-    expect(screen.getByText('C.')).toBeInTheDocument();
-    expect(screen.getByText('D.')).toBeInTheDocument();
-    expect(screen.getByText('Madrid')).toBeInTheDocument();
+    // All options should be displayed with labels
+    expect(screen.getByText('A. London')).toBeInTheDocument();
+    expect(screen.getByText('B. Berlin')).toBeInTheDocument();
+    expect(screen.getByText('C. Paris')).toBeInTheDocument();
+    expect(screen.getByText('D. Madrid')).toBeInTheDocument();
     
     // Question reference should be shown (abbreviated)
     expect(screen.getByText('Question:')).toBeInTheDocument();
@@ -74,7 +71,7 @@ describe('AnswerKeyView', () => {
     
     // Options section should not be displayed
     expect(screen.queryByText('Options:')).not.toBeInTheDocument();
-    expect(screen.queryByText('A.')).not.toBeInTheDocument();
+    expect(screen.queryByText('A. ')).not.toBeInTheDocument();
   });
 
   it('shows explanations when showExplanations is true (default)', () => {
@@ -175,14 +172,12 @@ describe('AnswerKeyView', () => {
     expect(optionsSection).toBeInTheDocument();
     
     // Check that Paris option is highlighted (it should have green background)
-    const allParisElements = screen.getAllByText('Paris');
-    const parisInOptions = allParisElements.find(el => 
-      el.closest('div')?.classList.contains('bg-green-200')
-    );
-    expect(parisInOptions).toBeInTheDocument();
+    const parisOption = screen.getByText('C. Paris').closest('div');
+    expect(parisOption).toHaveClass('bg-green-200');
+    expect(parisOption).toHaveClass('text-green-800');
     
     // Other options should not be highlighted
-    const londonOption = screen.getByText('London').closest('div');
+    const londonOption = screen.getByText('A. London').closest('div');
     expect(londonOption).toHaveClass('bg-gray-100');
     expect(londonOption).toHaveClass('text-gray-700');
   });

@@ -22,7 +22,8 @@ const nextConfig: NextConfig = {
     ],
   },
   
-
+  // Transpile packages for better compatibility
+  transpilePackages: ['@supabase/supabase-js'],
   
   // Optimize images and static assets
   images: {

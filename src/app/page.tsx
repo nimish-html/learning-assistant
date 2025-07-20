@@ -11,6 +11,7 @@ import { LazySignInForm as SignInForm, LazySignUpForm as SignUpForm } from '@/co
 import UserMenu from '@/components/UserMenu';
 import { useAuth } from '@/lib/auth-context';
 import { GeneratePayload, Question, QuestionSchema, OutputFormat } from '@/lib/schema';
+import { getApiConfig, getSupabaseHeaders } from '@/lib/api-config';
 import { 
   Brain, 
   Sparkles, 
@@ -26,7 +27,7 @@ import {
   User,
   LogIn,
   UserPlus,
-  Save,
+
   History
 } from 'lucide-react';
 
@@ -37,8 +38,9 @@ export default function TutoratiApp() {
   // Configure the hook to expect a **raw text** stream instead of the default `data` protocol
   // This prevents "Failed to parse stream string" errors that are harmless for plain text streams.
   const { completion, complete, isLoading, error } = useCompletion({
-    api: '/api/generate',
+    api: getApiConfig().generateQuestionsUrl,
     streamProtocol: 'text',
+    headers: getSupabaseHeaders(),
   });
   
   const [showForm, setShowForm] = useState(true);
@@ -181,10 +183,11 @@ export default function TutoratiApp() {
     setVerifyError(null);
 
     try {
-      const res = await fetch('/api/verify', {
+      const res = await fetch(getApiConfig().verifyQuestionsUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...getSupabaseHeaders(),
         },
         body: JSON.stringify({ questions }),
       });
@@ -437,52 +440,7 @@ export default function TutoratiApp() {
 
                       {/* Action Buttons */}
                       <div className="flex flex-wrap gap-4 mt-8 pt-6 border-t">
-                        {/* Save Results Button - Only for authenticated users */}
-                        {user && questions && lastPayload && (
-                          <SaveResultsButton
-                            questions={questions}
-                            metadata={{
-                              exam: lastPayload.exam,
-                              classStandard: lastPayload.classStandard,
-                              difficulty: lastPayload.difficulty,
-                              type: lastPayload.type,
-                              outputFormat: outputFormat,
-                              questionCount: questions.length
-                            }}
-                          />
-                        )}
-                        
-                        {/* Sign-in prompt for unauthenticated users */}
-                        {!user && questions && (
-                          <div className="flex items-center gap-3 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                            <Save className="w-5 h-5 text-blue-600" />
-                            <div>
-                              <p className="text-sm font-medium text-blue-800">Save your results</p>
-                              <p className="text-xs text-blue-600">
-                                <button
-                                  onClick={() => {
-                                    setAuthMode('signin');
-                                    setShowAuthModal(true);
-                                  }}
-                                  className="underline hover:no-underline"
-                                >
-                                  Sign in
-                                </button>
-                                {' or '}
-                                <button
-                                  onClick={() => {
-                                    setAuthMode('signup');
-                                    setShowAuthModal(true);
-                                  }}
-                                  className="underline hover:no-underline"
-                                >
-                                  create an account
-                                </button>
-                                {' to save your generated questions'}
-                              </p>
-                            </div>
-                          </div>
-                        )}
+
 
                         {/* Verify Button */}
                         {questions && !isVerifying && !verifyResult && (

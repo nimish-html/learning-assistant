@@ -1,4 +1,5 @@
 import { Question, OutputFormat, FormattedOutput, Document } from './schema';
+import { formatOption } from './option-utils';
 
 /**
  * Base interface for question formatters
@@ -11,7 +12,7 @@ export interface QuestionFormatter {
    * @param options Optional formatting options
    * @returns FormattedOutput with documents structured for the format
    */
-  format(questions: Question[], options?: any): FormattedOutput;
+  format(questions: Question[], options?: unknown): FormattedOutput;
 }
 
 /**
@@ -46,8 +47,9 @@ export function formatQuestionContent(question: Question, index: number): string
   // Add options for MCQ questions
   if (question.options && question.options.length > 0) {
     question.options.forEach((option, optIndex) => {
-      const optionLabel = String.fromCharCode(65 + optIndex); // A, B, C, D...
-      content += `${optionLabel}. ${option}\n`;
+      // Use the formatOption utility to handle duplicate labels properly
+      const formattedOption = formatOption(option, optIndex);
+      content += `${formattedOption}\n`;
     });
     content += '\n';
   }

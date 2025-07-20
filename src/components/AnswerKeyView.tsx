@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Question } from '@/lib/schema';
+import { formatOption } from '@/lib/option-utils';
 import { Key, CheckCircle, Info } from 'lucide-react';
 
 interface AnswerKeyViewProps {
@@ -76,7 +77,7 @@ const AnswerKeyView: React.FC<AnswerKeyViewProps> = ({
           <p className="text-sm font-medium text-gray-700 mb-2">Options:</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {question.options.map((option, optIndex) => {
-              const optionLabel = String.fromCharCode(65 + optIndex); // A, B, C, D...
+              const formattedOption = formatOption(option, optIndex);
               const isCorrect = option.trim().toLowerCase() === question.answer.trim().toLowerCase();
               return (
                 <div
@@ -87,11 +88,8 @@ const AnswerKeyView: React.FC<AnswerKeyViewProps> = ({
                       : 'bg-gray-100 text-gray-700'
                   }`}
                 >
-                  <span className="font-medium min-w-[20px]">
-                    {optionLabel}.
-                  </span>
                   <span className="flex-1">
-                    {option}
+                    {formattedOption}
                   </span>
                   {isCorrect && (
                     <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />

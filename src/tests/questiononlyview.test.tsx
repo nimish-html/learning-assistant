@@ -49,15 +49,11 @@ describe('QuestionOnlyView', () => {
     expect(screen.getByText('Question 1')).toBeInTheDocument();
     expect(screen.getByText('What is the capital of France?')).toBeInTheDocument();
     
-    // Options should be displayed
-    expect(screen.getByText('A.')).toBeInTheDocument();
-    expect(screen.getByText('London')).toBeInTheDocument();
-    expect(screen.getByText('B.')).toBeInTheDocument();
-    expect(screen.getByText('Berlin')).toBeInTheDocument();
-    expect(screen.getByText('C.')).toBeInTheDocument();
-    expect(screen.getByText('Paris')).toBeInTheDocument();
-    expect(screen.getByText('D.')).toBeInTheDocument();
-    expect(screen.getByText('Madrid')).toBeInTheDocument();
+    // Options should be displayed with labels
+    expect(screen.getByText('A. London')).toBeInTheDocument();
+    expect(screen.getByText('B. Berlin')).toBeInTheDocument();
+    expect(screen.getByText('C. Paris')).toBeInTheDocument();
+    expect(screen.getByText('D. Madrid')).toBeInTheDocument();
     
     // Answer and explanation should NOT be displayed
     expect(screen.queryByText('Answer:')).not.toBeInTheDocument();

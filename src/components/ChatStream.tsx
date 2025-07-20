@@ -3,6 +3,8 @@
 import { useChat } from '@ai-sdk/react';
 import { useState } from 'react';
 import { Question } from '@/lib/schema';
+import { formatOption } from '@/lib/option-utils';
+import { getApiConfig, getSupabaseHeaders } from '@/lib/api-config';
 
 interface ChatStreamProps {
   onVerify?: (questions: Question[]) => void;
@@ -10,7 +12,8 @@ interface ChatStreamProps {
 
 export default function ChatStream({ onVerify }: ChatStreamProps) {
   const { messages, isLoading, error, reload } = useChat({
-    api: '/api/generate',
+    api: getApiConfig().chatStreamUrl,
+    headers: getSupabaseHeaders(),
   });
   
   const [isVerifying, setIsVerifying] = useState(false);
@@ -40,10 +43,11 @@ export default function ChatStream({ onVerify }: ChatStreamProps) {
     setVerificationError(null);
 
     try {
-      const response = await fetch('/api/verify', {
+      const response = await fetch(getApiConfig().verifyQuestionsUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...getSupabaseHeaders(),
         },
         body: JSON.stringify({ questions }),
       });
@@ -95,8 +99,7 @@ export default function ChatStream({ onVerify }: ChatStreamProps) {
             <div className="space-y-1">
               {question.options.map((option, optIdx) => (
                 <div key={optIdx} className="text-sm text-gray-800">
-                  <span className="font-medium mr-2">{String.fromCharCode(65 + optIdx)}.</span>
-                  {option}
+                  {formatOption(option, optIdx)}
                 </div>
               ))}
             </div>
